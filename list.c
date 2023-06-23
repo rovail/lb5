@@ -141,20 +141,12 @@ void loadStudentsFromFile(Node** head)
     {
         Student student;
         size_t elements_read = fread(&student, sizeof(Student), 1, file);
-        if (elements_read == 0) 
+        if (elements_read != 1) 
         {
             break;
         }
 
         Node* newNode = (Node*)malloc(sizeof(Node));
-        if (newNode == NULL) 
-        {
-            fprintf(stderr, "Error allocating memory for a new node.\n");
-            fclose(file);
-            freeStudentList(head);
-            return;
-        }
-
         newNode->data = student;
         newNode->next = NULL;
 
@@ -174,31 +166,19 @@ void loadStudentsFromFile(Node** head)
     printf("Student list loaded from file.\n");
 }
 
-void saveStudentsToFile(const Node* head) {
+void saveStudentsToFile(const Node* head) 
+{
     FILE* file = fopen("data.bin", "wb");
-    if (file == NULL) {
-        fprintf(stderr, "Failed to open file for writing.\n");
+    if (file == NULL) 
+    {
+        printf("Failed to open file for writing.\n");
         return;
     }
 
     const Node* current = head;
-    int listSize = 0;
-
-    while (current != NULL) {
-        listSize++;
-        current = current->next;
-    }
-
-    fwrite(&listSize, sizeof(int), 1, file);
-
-    current = head;
-    while (current != NULL) {
-        size_t elements_written = fwrite(&(current->data), sizeof(Student), 1, file);
-        if (elements_written != 1) {
-            fprintf(stderr, "Error writing student data to file.\n");
-            fclose(file);
-            return;
-        }
+    while (current != NULL) 
+    {
+        fwrite(&(current->data), sizeof(Student), 1, file);
         current = current->next;
     }
 
