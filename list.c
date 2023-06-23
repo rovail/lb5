@@ -176,22 +176,19 @@ void saveStudentsToFile(const Node* head) {
     const Node* current = head;
     int listSize = 0;
 
-    // Подсчитываем количество студентов в списке
     while (current != NULL) {
         listSize++;
         current = current->next;
     }
 
-    // Записываем размер списка студентов 
     fwrite(&listSize, sizeof(int), 1, file);
 
-    // Записываем каждого студента в файл
     current = head;
     while (current != NULL) {
         size_t elements_written = fwrite(&(current->data), sizeof(Student), 1, file);
         if (elements_written != 1) {
             fprintf(stderr, "Error writing student data to file.\n");
-            fclose(file); // Закрываем файл перед выходом
+            fclose(file);
             return;
         }
         current = current->next;

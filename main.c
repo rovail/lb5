@@ -19,6 +19,11 @@ int main()
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
+        if (choice < 1 || choice > 5) {
+            printf("Invalid choice. Please try again.\n");
+            continue;
+        }
+
         switch (choice) {
             case 1:
                 printf("\nStudent List:\n");
@@ -39,9 +44,6 @@ int main()
                 freeStudentList(&studentList);
                 printf("Exiting program.\n");
                 exit(0);
-            default:
-                printf("Invalid choice. Please try again.\n");
-                break;
         }
         printf("\n");
     }
