@@ -1,10 +1,12 @@
-[{
-	"last_name":	"qwe",
-	"first_name":	"asd",
-	"middle_name":	"zxc",
-	"birth_year":	1,
-	"birth_month":	2,
-	"birth_day":	3,
-	"group":	"1e",
-	"gender":	1
-}]
+{
+	"students":	[{
+			"last_name":	"qwe",
+			"first_name":	"as",
+			"middle_name":	"z",
+			"birth_year":	1,
+			"birth_month":	2,
+			"birth_day":	3,
+			"group":	"1",
+			"gender":	1
+		}]
+}
