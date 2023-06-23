@@ -171,14 +171,19 @@ void saveStudentsToFile(const Node* head)
     FILE* file = fopen("data.bin", "wb");
     if (file == NULL) 
     {
-        printf("Failed to open file for writing.\n");
+        fprintf(stderr, "Failed to open file for writing.\n");
         return;
     }
 
     const Node* current = head;
     while (current != NULL) 
     {
-        fwrite(&(current->data), sizeof(Student), 1, file);
+        size_t elements_written = fwrite(&(current->data), sizeof(Student), 1, file);
+        if (elements_written != 1)
+        {
+            fprintf(stderr, "Error writing student data to file.\n");
+            break;
+        }
         current = current->next;
     }
 
