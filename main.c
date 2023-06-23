@@ -19,7 +19,7 @@ int main()
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
-        while (getchar() != '\n'); // Очистка входного буфера
+        while (getchar() != '\n');
 
         switch (choice) {
             case 1:

@@ -1,0 +1,12 @@
+[{
+		"last_name":	"qwe",
+		"first_name":	"asd",
+		"middle_name":	"zxc",
+		"birth_date":	{
+			"birth_year":	12,
+			"birth_month":	12,
+			"birth_day":	12
+		},
+		"group":	"qwe",
+		"gender":	1
+	}]
