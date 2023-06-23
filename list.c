@@ -191,14 +191,14 @@ void saveStudentsToFile(const Node* head) {
         size_t elements_written = fwrite(&(current->data), sizeof(Student), 1, file);
         if (elements_written != 1) {
             fprintf(stderr, "Error writing student data to file.\n");
-            break;
+            fclose(file); // Закрываем файл перед выходом
+            return;
         }
         current = current->next;
     }
 
     fclose(file);
 }
-
 
 void freeStudentList(Node** head) 
 {
