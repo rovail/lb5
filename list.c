@@ -182,7 +182,7 @@ void saveStudentsToFile(const Node* head) {
         current = current->next;
     }
 
-    // Записываем размер списка студентов
+    // Записываем размер списка студентов 
     fwrite(&listSize, sizeof(int), 1, file);
 
     // Записываем каждого студента в файл
