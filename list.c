@@ -166,21 +166,30 @@ void loadStudentsFromFile(Node** head)
     printf("Student list loaded from file.\n");
 }
 
-void saveStudentsToFile(const Node* head) 
-{
+void saveStudentsToFile(const Node* head) {
     FILE* file = fopen("data.bin", "wb");
-    if (file == NULL) 
-    {
+    if (file == NULL) {
         fprintf(stderr, "Failed to open file for writing.\n");
         return;
     }
 
     const Node* current = head;
-    while (current != NULL) 
-    {
+    int listSize = 0;
+
+    // Подсчитываем количество студентов в списке
+    while (current != NULL) {
+        listSize++;
+        current = current->next;
+    }
+
+    // Записываем размер списка студентов
+    fwrite(&listSize, sizeof(int), 1, file);
+
+    // Записываем каждого студента в файл
+    current = head;
+    while (current != NULL) {
         size_t elements_written = fwrite(&(current->data), sizeof(Student), 1, file);
-        if (elements_written != 1)
-        {
+        if (elements_written != 1) {
             fprintf(stderr, "Error writing student data to file.\n");
             break;
         }
