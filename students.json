@@ -1,14 +1,20 @@
-{
-	"students":	[{
-			"last_name":	"qwe",
-			"first_name":	"asd",
-			"middle_name":	"zxc",
-			"birth_date":	{
-				"birth_year":	1,
-				"birth_month":	2,
-				"birth_day":	3
-			},
-			"group":	"1e",
-			"gender":	1
-		}]
-}
+[{
+		"last_name":	"qwe",
+		"first_name":	"qwe",
+		"middle_name":	"qwe",
+		"birth_year":	1,
+		"birth_month":	2,
+		"birth_day":	3,
+		"group":	"1r",
+		"gender":	1
+	}]
+[{
+		"last_name":	"qwe",
+		"first_name":	"qwe",
+		"middle_name":	"qwe",
+		"birth_year":	1,
+		"birth_month":	2,
+		"birth_day":	3,
+		"group":	"1r",
+		"gender":	1
+	}]
