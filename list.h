@@ -29,7 +29,6 @@ typedef struct Node {
 void loadStudentsFromFile(Node** head);
 void saveStudentsToFile(const Node* head);
 void addStudent(Node** head);
-void addJsonStudent(Node** head, Node* newNode);
 void removeStudent(Node** head);
 void freeStudentList(Node** head);
 void printStudent(const Student* student);
