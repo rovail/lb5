@@ -190,6 +190,7 @@ void saveStudentsToFile(const Node* head)
     fclose(file);
 }
 
+
 void freeStudentList(Node** head) 
 {
     Node* current = *head;
