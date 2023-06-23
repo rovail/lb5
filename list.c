@@ -170,112 +170,104 @@ void loadStudentsFromFile(Node** head) {
         return;
     }
 
-    cJSON* students_array = cJSON_GetObjectItem(root, "students");
-    if (students_array == NULL || !cJSON_IsArray(students_array)) {
+    cJSON* studentArray = cJSON_GetObjectItem(root, "students");
+    if (studentArray == NULL || cJSON_GetArraySize(studentArray) == 0) {
+        printf("No student data found in the file.\n");
         cJSON_Delete(root);
-        printf("Invalid students data.\n");
         return;
     }
 
-    int num_students = cJSON_GetArraySize(students_array);
-    for (int i = 0; i < num_students; i++) {
-        cJSON* student_item = cJSON_GetArrayItem(students_array, i);
-        if (student_item != NULL && cJSON_IsObject(student_item)) {
-            cJSON* last_name_item = cJSON_GetObjectItem(student_item, "last_name");
-            cJSON* first_name_item = cJSON_GetObjectItem(student_item, "first_name");
-            cJSON* middle_name_item = cJSON_GetObjectItem(student_item, "middle_name");
-            cJSON* birth_date_item = cJSON_GetObjectItem(student_item, "birth_date");
-            cJSON* group_item = cJSON_GetObjectItem(student_item, "group");
-            cJSON* gender_item = cJSON_GetObjectItem(student_item, "gender");
+    cJSON* studentObj = NULL;
+    cJSON_ArrayForEach(studentObj, studentArray) {
+        cJSON* lastNameItem = cJSON_GetObjectItem(studentObj, "last_name");
+        cJSON* firstNameItem = cJSON_GetObjectItem(studentObj, "first_name");
+        cJSON* middleNameItem = cJSON_GetObjectItem(studentObj, "middle_name");
+        cJSON* birthYearItem = cJSON_GetObjectItem(studentObj, "birth_year");
+        cJSON* birthMonthItem = cJSON_GetObjectItem(studentObj, "birth_month");
+        cJSON* birthDayItem = cJSON_GetObjectItem(studentObj, "birth_day");
+        cJSON* groupItem = cJSON_GetObjectItem(studentObj, "group");
+        cJSON* genderItem = cJSON_GetObjectItem(studentObj, "gender");
 
-            if (last_name_item != NULL && cJSON_IsString(last_name_item) &&
-                first_name_item != NULL && cJSON_IsString(first_name_item) &&
-                middle_name_item != NULL && cJSON_IsString(middle_name_item) &&
-                birth_date_item != NULL && cJSON_IsObject(birth_date_item) &&
-                group_item != NULL && cJSON_IsString(group_item) &&
-                gender_item != NULL && cJSON_IsNumber(gender_item)) {
-                // Создание нового узла списка и заполнение данных студента
-                Node* newNode = (Node*)malloc(sizeof(Node));
-                if (newNode != NULL) {
-                    snprintf(newNode->data.last_name, sizeof(newNode->data.last_name), "%s", last_name_item->valuestring);
-                    snprintf(newNode->data.first_name, sizeof(newNode->data.first_name), "%s", first_name_item->valuestring);
-                    snprintf(newNode->data.middle_name, sizeof(newNode->data.middle_name), "%s", middle_name_item->valuestring);
+        if (lastNameItem == NULL || firstNameItem == NULL || middleNameItem == NULL ||
+            birthYearItem == NULL || birthMonthItem == NULL || birthDayItem == NULL ||
+            groupItem == NULL || genderItem == NULL) {
+            printf("Invalid student data.\n");
+            continue;
+        }
 
-                    cJSON* year_item = cJSON_GetObjectItem(birth_date_item, "year");
-                    cJSON* month_item = cJSON_GetObjectItem(birth_date_item, "month");
-                    cJSON* day_item = cJSON_GetObjectItem(birth_date_item, "day");
-                    if (year_item != NULL && cJSON_IsNumber(year_item) &&
-                        month_item != NULL && cJSON_IsNumber(month_item) &&
-                        day_item != NULL && cJSON_IsNumber(day_item)) {
-                        newNode->data.birth_date.birth_year = year_item->valueint;
-                        newNode->data.birth_date.birth_month = month_item->valueint;
-                        newNode->data.birth_date.birth_day = day_item->valueint;
-                    }
+        Student newStudent;
+        strncpy(newStudent.last_name, lastNameItem->valuestring, sizeof(newStudent.last_name) - 1);
+        newStudent.last_name[sizeof(newStudent.last_name) - 1] = '\0';
+        strncpy(newStudent.first_name, firstNameItem->valuestring, sizeof(newStudent.first_name) - 1);
+        newStudent.first_name[sizeof(newStudent.first_name) - 1] = '\0';
+        strncpy(newStudent.middle_name, middleNameItem->valuestring, sizeof(newStudent.middle_name) - 1);
+        newStudent.middle_name[sizeof(newStudent.middle_name) - 1] = '\0';
+        newStudent.birth_date.birth_year = birthYearItem->valueint;
+        newStudent.birth_date.birth_month = birthMonthItem->valueint;
+        newStudent.birth_date.birth_day = birthDayItem->valueint;
+        strncpy(newStudent.group, groupItem->valuestring, sizeof(newStudent.group) - 1);
+        newStudent.group[sizeof(newStudent.group) - 1] = '\0';
+        newStudent.gender = (Gender)genderItem->valueint;
 
-                    snprintf(newNode->data.group, sizeof(newNode->data.group), "%s", group_item->valuestring);
+        Node* newNode = (Node*)malloc(sizeof(Node));
+        if (newNode == NULL) {
+            printf("Memory allocation failed.\n");
+            continue;
+        }
 
-                    int gender_value = gender_item->valueint;
-                    newNode->data.gender = (gender_value == 0) ? MALE : FEMALE;
+        newNode->data = newStudent;
+        newNode->next = NULL;
 
-                    newNode->next = NULL;
-
-                    // Добавление студента в список
-                    if (*head == NULL) {
-                        *head = newNode;
-                    } else {
-                        Node* current = *head;
-                        while (current->next != NULL) {
-                            current = current->next;
-                        }
-                        current->next = newNode;
-                    }
-                }
+        if (*head == NULL) {
+            *head = newNode;
+        } else {
+            Node* current = *head;
+            while (current->next != NULL) {
+                current = current->next;
             }
+            current->next = newNode;
         }
     }
 
     cJSON_Delete(root);
-
     printf("Students loaded from file successfully.\n");
 }
 
 void saveStudentsToFile(const Node* head) {
-    cJSON* root = cJSON_CreateArray(); // Создаем массив JSON-объектов
+    FILE* file = fopen("students.json", "w");
+    if (file == NULL) {
+        printf("Failed to create file.\n");
+        return;
+    }
+
+    cJSON* root = cJSON_CreateObject();
+    cJSON* studentArray = cJSON_CreateArray();
 
     const Node* current = head;
     while (current != NULL) {
-        cJSON* studentObject = cJSON_CreateObject(); // Создаем JSON-объект для каждого студента
+        cJSON* studentObj = cJSON_CreateObject();
+        cJSON_AddItemToArray(studentArray, studentObj);
 
-        // Заполняем JSON-объект данными студента
-        cJSON_AddStringToObject(studentObject, "last_name", current->data.last_name);
-        cJSON_AddStringToObject(studentObject, "first_name", current->data.first_name);
-        cJSON_AddStringToObject(studentObject, "middle_name", current->data.middle_name);
-        cJSON_AddNumberToObject(studentObject, "birth_year", current->data.birth_date.birth_year);
-        cJSON_AddNumberToObject(studentObject, "birth_month", current->data.birth_date.birth_month);
-        cJSON_AddNumberToObject(studentObject, "birth_day", current->data.birth_date.birth_day);
-        cJSON_AddStringToObject(studentObject, "group", current->data.group);
-        cJSON_AddNumberToObject(studentObject, "gender", current->data.gender);
-
-        cJSON_AddItemToArray(root, studentObject); // Добавляем JSON-объект студента в массив
+        cJSON_AddStringToObject(studentObj, "last_name", current->data.last_name);
+        cJSON_AddStringToObject(studentObj, "first_name", current->data.first_name);
+        cJSON_AddStringToObject(studentObj, "middle_name", current->data.middle_name);
+        cJSON_AddNumberToObject(studentObj, "birth_year", current->data.birth_date.birth_year);
+        cJSON_AddNumberToObject(studentObj, "birth_month", current->data.birth_date.birth_month);
+        cJSON_AddNumberToObject(studentObj, "birth_day", current->data.birth_date.birth_day);
+        cJSON_AddStringToObject(studentObj, "group", current->data.group);
+        cJSON_AddNumberToObject(studentObj, "gender", current->data.gender);
 
         current = current->next;
     }
 
-    FILE* file = fopen("students.json", "a"); // Открываем файл в режиме добавления
-    if (file == NULL) {
-        printf("Failed to open file for appending.\n");
-        cJSON_Delete(root); // Освобождаем память, если не удалось открыть файл
-        return;
-    }
+    cJSON_AddItemToObject(root, "students", studentArray);
 
-    char* jsonString = cJSON_Print(root); // Преобразуем JSON-данные в строку
-
-    fprintf(file, "%s\n", jsonString); // Записываем строку в файл
+    char* jsonStr = cJSON_Print(root);
+    fprintf(file, "%s", jsonStr);
     fclose(file);
-    cJSON_Delete(root);
-    free(jsonString);
 
-    printf("Student list saved to file.\n");
+    cJSON_Delete(root);
+    printf("Student list saved to file successfully.\n");
 }
 
 void freeStudentList(Node** head) 
