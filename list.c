@@ -141,12 +141,20 @@ void loadStudentsFromFile(Node** head)
     {
         Student student;
         size_t elements_read = fread(&student, sizeof(Student), 1, file);
-        if (elements_read != 1) 
+        if (elements_read == 0) 
         {
             break;
         }
 
         Node* newNode = (Node*)malloc(sizeof(Node));
+        if (newNode == NULL) 
+        {
+            fprintf(stderr, "Error allocating memory for a new node.\n");
+            fclose(file);
+            freeStudentList(head);
+            return;
+        }
+
         newNode->data = student;
         newNode->next = NULL;
 
