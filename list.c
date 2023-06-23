@@ -147,132 +147,116 @@ void addJsonStudent(Node** head, Node* newNode) {
 }
 
 void loadStudentsFromFile(Node** head) {
-    FILE* file = fopen("data.json", "r");
-    if (file == NULL)
-    {
-        printf("Error opening file.\n");
+    FILE* file = fopen("students.json", "r");
+    if (file == NULL) {
+        printf("Ошибка при открытии файла.\n");
         return;
     }
 
+    // Чтение данных из файла в строку
     fseek(file, 0, SEEK_END);
     long file_size = ftell(file);
-    rewind(file);
+    fseek(file, 0, SEEK_SET);
+    char* buffer = (char*)malloc(file_size + 1);
+    fread(buffer, 1, file_size, file);
+    buffer[file_size] = '\0';
 
-    char* buffer = (char*)malloc(sizeof(char) * file_size);
-    fread(buffer, sizeof(char), file_size, file);
     fclose(file);
 
-    struct json_object* json = json_tokener_parse(buffer);
-    free(buffer);
+    // Парсинг JSON-строки и добавление данных в список
+    json_object* root = json_tokener_parse(buffer);
+    if (root == NULL) {
+        printf("Ошибка при парсинге JSON.\n");
+        free(buffer);
+        return;
+    }
 
-    int studentCount = json_object_array_length(json);
-    for (int i = 0; i < studentCount; i++)
-    {
-        struct json_object* studentObj = json_object_array_get_idx(json, i);
+    int length = json_object_array_length(root);
+    for (int i = 0; i < length; i++) {
+        json_object* student_obj = json_object_array_get_idx(root, i);
+        if (student_obj != NULL && json_object_get_type(student_obj) == json_type_object) {
+            json_object* last_name_obj = json_object_object_get(student_obj, "last_name");
+            json_object* first_name_obj = json_object_object_get(student_obj, "first_name");
+            json_object* middle_name_obj = json_object_object_get(student_obj, "middle_name");
+            json_object* birth_date_obj = json_object_object_get(student_obj, "birth_date");
+            json_object* group_obj = json_object_object_get(student_obj, "group");
+            json_object* gender_obj = json_object_object_get(student_obj, "gender");
 
-        struct Student* student = (struct Student*)malloc(sizeof(struct Student));
-        student->next = NULL;
+            if (last_name_obj != NULL && first_name_obj != NULL && middle_name_obj != NULL &&
+                birth_date_obj != NULL && group_obj != NULL && gender_obj != NULL) {
+                const char* last_name = json_object_get_string(last_name_obj);
+                const char* first_name = json_object_get_string(first_name_obj);
+                const char* middle_name = json_object_get_string(middle_name_obj);
 
-        json_object_object_foreach(studentObj, key, val)
-        {
-            if (strcmp(key, "Name") == 0)
-            {
-                strcpy(student->firstName, json_object_get_string(val));
-            }
-            else if (strcmp(key, "Surname") == 0)
-            {
-                strcpy(student->lastName, json_object_get_string(val));
-            }
-            else if (strcmp(key, "Middle name") == 0)
-            {
-                strcpy(student->middleName, json_object_get_string(val));
-            }
-            else if (strcmp(key, "Date of Birth") == 0)
-            {
-                struct json_object* dobObj = val;
-                student->birthDate.day = json_object_get_int(json_object_array_get_idx(dobObj, 0));
-                student->birthDate.month = json_object_get_int(json_object_array_get_idx(dobObj, 1));
-                student->birthDate.year = json_object_get_int(json_object_array_get_idx(dobObj, 2));
-            }
-            else if (strcmp(key, "Group") == 0)
-            {
-                strcpy(student->group, json_object_get_string(val));
-            }
-            else if (strcmp(key, "Gender") == 0)
-            {
-                const char* genderStr = json_object_get_string(val);
-                if (strcmp(genderStr, "Male") == 0)
-                {
-                    student->gender = MALE;
+                json_object* birth_date_year_obj = json_object_object_get(birth_date_obj, "birth_year");
+                json_object* birth_date_month_obj = json_object_object_get(birth_date_obj, "birth_month");
+                json_object* birth_date_day_obj = json_object_object_get(birth_date_obj, "birth_day");
+
+                if (birth_date_year_obj != NULL && birth_date_month_obj != NULL && birth_date_day_obj != NULL) {
+                    int birth_date_year = json_object_get_int(birth_date_year_obj);
+                    int birth_date_month = json_object_get_int(birth_date_month_obj);
+                    int birth_date_day = json_object_get_int(birth_date_day_obj);
+
+                    const char* group = json_object_get_string(group_obj);
+                    Gender gender = json_object_get_int(gender_obj) == 0 ? MALE : FEMALE;
+
+                    Student student;
+                    strcpy(student.last_name, last_name);
+                    strcpy(student.first_name, first_name);
+                    strcpy(student.middle_name, middle_name);
+                    student.birth_date.birth_year = birth_date_year;
+                    student.birth_date.birth_month = birth_date_month;
+                    student.birth_date.birth_day = birth_date_day;
+                    strcpy(student.group, group);
+                    student.gender = gender;
+
+                    addStudent(head);
                 }
-                else
-                {
-                    student->gender = FEMALE;
-                }
             }
-        }
-
-        if (head == NULL)
-        {
-            head = student;
-        }
-        else
-        {
-            struct Student* current = head;
-            while (current->next != NULL)
-            {
-                current = current->next;
-            }
-            current->next = student;
         }
     }
-    json_object_put(json);
 
-    printf("Student data successfully loaded from 'data.json' file.\n");
+    free(buffer);
+    json_object_put(root);
 }
 
 void saveStudentsToFile(const Node* head) {
-    struct json_object* json = json_object_new_array();
+    FILE* file = fopen("data.json", "w");
+    if (file == NULL) {
+        printf("Ошибка при открытии файла.\n");
+        return;
+    }
 
-    struct Student* current = head;
-    while (current != NULL)
+    json_object* root = json_object_new_array();
 
-    {
-        struct json_object* studentObj = json_object_new_object();
+    const Node* current = head;
+    while (current != NULL) {
+        const Student* student = &(current->data);
+        json_object* student_obj = json_object_new_object();
 
-        json_object_object_add(studentObj, "Name", json_object_new_string(current->firstName));
-        json_object_object_add(studentObj, "Surname", json_object_new_string(current->lastName));
-        json_object_object_add(studentObj, "Middle name", json_object_new_string(current->middleName));
+        json_object_object_add(student_obj, "last_name", json_object_new_string(student->last_name));
+        json_object_object_add(student_obj, "first_name", json_object_new_string(student->first_name));
+        json_object_object_add(student_obj, "middle_name", json_object_new_string(student->middle_name));
 
-        struct json_object* dobObj = json_object_new_array();
-        json_object_array_add(dobObj, json_object_new_int(current->birthDate.day));
-        json_object_array_add(dobObj, json_object_new_int(current->birthDate.month));
-        json_object_array_add(dobObj, json_object_new_int(current->birthDate.year));
-        json_object_object_add(studentObj, "Date of Birth", dobObj);
+        json_object* birth_date_obj = json_object_new_object();
+        json_object_object_add(birth_date_obj, "year", json_object_new_int(student->birth_date.birth_year));
+        json_object_object_add(birth_date_obj, "month", json_object_new_int(student->birth_date.birth_month));
+        json_object_object_add(birth_date_obj, "day", json_object_new_int(student->birth_date.birth_day));
+        json_object_object_add(student_obj, "birth_date", birth_date_obj);
 
-        json_object_object_add(studentObj, "Group", json_object_new_string(current->group));
+        json_object_object_add(student_obj, "group", json_object_new_string(student->group));
+        json_object_object_add(student_obj, "gender", json_object_new_int(student->gender));
 
-        const char* genderStr = (current->gender == MALE) ? "Male" : "Female";
-        json_object_object_add(studentObj, "Gender", json_object_new_string(genderStr));
-
-        json_object_array_add(json, studentObj);
+        json_object_array_add(root, student_obj);
 
         current = current->next;
     }
 
-    FILE* file = fopen("data.json", "w");
-    if (file == NULL)
-    {
-        printf("Error opening file.\n");
-        return;
-    }
+    const char* json_str = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+    fputs(json_str, file);
 
-    fprintf(file, "%s", json_object_to_json_string_ext(json, JSON_C_TO_STRING_PRETTY));
     fclose(file);
-
-    json_object_put(json);
-
-    printf("Data successfully saved in file 'date.json'.\n");
+    json_object_put(root);
 }
 
 void freeStudentList(Node** head) 
